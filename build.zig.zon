@@ -1,0 +1,17 @@
+.{
+    .name = .Binshape,
+    .version = "0.0.0",
+    .fingerprint = 0x3958752043452cdd,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+        .z_toml = .{
+            .url = "https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.0.tar.gz",
+            .hash = "z_toml-0.4.0-QKon88s1CABQb3Y8VTvsF12o3fTbl063iokOBRG4BjyD",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
