@@ -13,12 +13,6 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    const z_toml = b.dependency("z_toml", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    exe.root_module.addImport("toml", z_toml.module("toml"));
-
     b.installArtifact(exe);
 
     const run_step = b.step("run", "Run the app");

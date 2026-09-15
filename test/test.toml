@@ -1,0 +1,87 @@
+[system]
+endianness = "little"
+
+_cpp = {
+    standard = "c++23",
+    error = "expected"
+}
+
+_c = {
+    standard = "c99"
+}
+
+_rust = {
+    edition = "2024"
+}
+
+
+[enum.ErrorType]
+_ = { size = 1 }
+
+INVALID_PACKET = 0
+CRC_ERROR = 1
+INVALID_COMMAND = 2
+MOTOR_ERROR = 3
+
+
+[enum.MotorMode]
+_ = { size = 1 }
+
+DISABLED = 0
+FORWARD = 1
+BACKWARD = 2
+BRAKE = 3
+
+
+[struct.MotorCommand]
+left_motor = "i16"
+right_motor = "i16"
+mode = "MotorMode"
+
+
+[struct.SensorData]
+temperature = "i8"
+battery_voltage = "u16"
+distance = "u32"
+
+
+[struct.Status]
+error = "ErrorType"
+uptime = "u32"
+flags = "u8"
+
+
+[struct.AllIntegers]
+signed_8 = "i8"
+signed_16 = "i16"
+signed_32 = "i32"
+signed_64 = "i64"
+
+unsigned_8 = "u8"
+unsigned_16 = "u16"
+unsigned_32 = "u32"
+unsigned_64 = "u64"
+
+
+[struct.Ping]
+
+
+[struct.Error]
+type = "ErrorType"
+code = "u16"
+
+
+[union.Packet]
+_ = ["Ping", "MotorCommand", "SensorData", "Status", "Error"]
+
+
+[union.Command]
+_ = {
+    PING = "Ping",
+    MOTOR = "MotorCommand"
+}
+
+
+[union.Message]
+_ = ["Ping", "Error"]
+
