@@ -1,5 +1,6 @@
 const std = @import("std");
 const errors = @import("errors.zig");
+const parser = @import("parser.zig");
 
 const Io = std.Io;
 
@@ -54,7 +55,7 @@ const TypeUnion = struct {
 };
 
 pub fn main(init: std.process.Init) !void {
-    const allocator = init.gpa;
+    const allocator = init.arena.allocator();
     const io = init.io;
     const args = try init.minimal.args.toSlice(allocator);
     const input_path = if (args.len > 1) args[1] else "test/test.toml";
@@ -63,38 +64,33 @@ pub fn main(init: std.process.Init) !void {
     var stdout_file_writer: Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
     const stdout = &stdout_file_writer.interface;
 
+    try parse(io, stdout, input_path);
     try stdout.flush();
 }
 
-fn parse(writer: *std.Io.Writer, path: []u8) !void {
-    const file = std.Io.Dir.cwd().openFile(io, "example.txt", .{})
-        catch |err| errors.error_opening_file(writer, path, err);
-    defer file.close(io);
+fn parse(io: std.Io, writer: *std.Io.Writer, path: []const u8) !void {
+    if (std.Io.Dir.cwd().openFile(io, path, .{ .mode = .read_only })) |file| {
+        defer file.close(io);
 
-    var buffer: [1024]u8 = undefined;
-    const fread = file.reader(io, &buffer);
-    const reader = &fread.interface;
+        var buf: [1024]u8 = undefined;
+        var file_reader: std.Io.File.Reader = file.reader(io, &buf);
 
-    // 3. Read line by line
-    while (try reader.takeDelimiter('\n')) |line| {
-        std.debug.print("{s}\n", .{line});
-    } else |err| {
-        if (err != error.EndOfStream) return err;
-    }
+        var parser_ctx = parser.Parser{
+            .io = io,
+            .path = path,
+            .writer = writer,
+        };
+
+        while (try file_reader.interface.takeDelimiter('\n')) |line| {
+            parser_ctx.next_row();
+            if (line.len == 0) continue;
+
+            // TODO: Sistemare, Hack temporaneo per vedere se il resto e' corretto
+            std.debug.print("Riga {d}: {s}\n", .{ parser_ctx.row, line });
+
+            if (parser.TypeDeclHeader.parse(&parser_ctx, line)) |_| {
+                std.debug.print("HA PARSATO!!!\n", .{});
+            }
+        }
+    } else |err| errors.error_opening_file(writer, path, err);
 }
-
-
-    // Apri il file
-
-    // Buffer per la lettura
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
-
-    // Buffer per ogni riga
-    var line_buffer: [4096]u8 = undefined;
-
-    // Leggi riga per riga
-    while (try reader.readUntilDelimiterOrEof(&line_buffer, '\n')) |line| {
-        std.debug.print("Riga: {s}\n", .{line});
-    }
-
